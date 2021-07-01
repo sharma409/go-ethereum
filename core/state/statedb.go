@@ -277,6 +277,10 @@ func (s *StateDB) BlockHash() common.Hash {
 	return s.bhash
 }
 
+func (s *StateDB) TxHash() common.Hash {
+	return s.thash
+}
+
 func (s *StateDB) GetCode(addr common.Address) []byte {
 	stateObject := s.getStateObject(addr)
 	if stateObject != nil {

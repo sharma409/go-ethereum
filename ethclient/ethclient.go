@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
@@ -481,6 +482,24 @@ func (ec *Client) CallContract(ctx context.Context, msg ethereum.CallMsg, blockN
 	return hex, nil
 }
 
+func (ec *Client) CallContracts(ctx context.Context, msgs []ethereum.CallMsg, blockNumber *big.Int) (*ethapi.CallResult, error) {
+	var ret *ethapi.CallResult
+	err := ec.c.CallContext(ctx, &ret, "eth_call", toCallArgs(msgs), toBlockNumArg(blockNumber))
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
+func (ec *Client) GetTxpoolContent(ctx context.Context) (map[string]map[string]map[string]*ethapi.RPCTransaction, error) {
+	var ret map[string]map[string]map[string]*ethapi.RPCTransaction
+	err := ec.c.CallContext(ctx, &ret, "txpool_content")
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
 // PendingCallContract executes a message call transaction using the EVM.
 // The state seen by the contract call is the pending state.
 func (ec *Client) PendingCallContract(ctx context.Context, msg ethereum.CallMsg) ([]byte, error) {
@@ -545,4 +564,27 @@ func toCallArg(msg ethereum.CallMsg) interface{} {
 		arg["gasPrice"] = (*hexutil.Big)(msg.GasPrice)
 	}
 	return arg
+}
+
+func toCallArgs(msgs []ethereum.CallMsg) interface{} {
+	args := make([]map[string]interface{}, len(msgs))
+	for idx, msg := range msgs {
+		args[idx] = map[string]interface{}{
+			"from": msg.From,
+			"to":   msg.To,
+		}
+		if len(msg.Data) > 0 {
+			args[idx]["data"] = hexutil.Bytes(msg.Data)
+		}
+		if msg.Value != nil {
+			args[idx]["value"] = (*hexutil.Big)(msg.Value)
+		}
+		if msg.Gas != 0 {
+			args[idx]["gas"] = hexutil.Uint64(msg.Gas)
+		}
+		if msg.GasPrice != nil {
+			args[idx]["gasPrice"] = (*hexutil.Big)(msg.GasPrice)
+		}
+	}
+	return args
 }
