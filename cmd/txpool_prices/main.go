@@ -120,7 +120,7 @@ func processLogs(msgs []ethereum.CallMsg, poolLogs [][]ethapi.LogResult) {
 
 func main() {
 	var ipcPath string
-	flag.StringVar(&ipcPath, "ipc", "/home/daniel/.ethereum/geth.ipc", "")
+	flag.StringVar(&ipcPath, "ipc", "/home/rishi/.ethereum/geth.ipc", "")
 	flag.Parse()
 
 	client, err := ethclient.Dial(ipcPath)
